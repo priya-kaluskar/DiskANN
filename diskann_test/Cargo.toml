@@ -1,0 +1,19 @@
+[package]
+name = "diskann_test"
+version.workspace = true
+description.workspace = true
+authors.workspace = true
+documentation.workspace = true
+license.workspace = true
+edition.workspace = true
+
+[dependencies]
+rand = "0.8"
+diskann = { path = "../diskann", features = ["testing"] }
+diskann-vector = { path = "../diskann-vector" }
+diskann-benchmark-core = { path = "../diskann-benchmark-core" }
+diskann-utils = { path = "../diskann-utils" }
+tokio = { version = "1" }
+
+[lints]
+workspace = true
