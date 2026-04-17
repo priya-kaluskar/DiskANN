@@ -1,0 +1,139 @@
+    Finished `release` profile [optimized + debuginfo] target(s) in 0.09s
+     Running `target/release/diskann-benchmark run --input-file ./diskann-benchmark/example/random-xs-dynamic.json --output-file dynamic-output.json`
+
+WARNING
+
+> Support for AArch64 has not yet been optimized.
+>
+> Performance may not be representative.
+>
+> This warning can be suppressed by passing the `--quiet` flag
+> before any of the documented commands.
+
+######################
+# Running Job 1 of 1 #
+######################
+
+Async Dynamic Index Run
+               tag: async-dynamic-index-run
+Runbook Parameters:
+Dynamic Runbook Parameters
+      Runbook Path: /Users/priya/Downloads/big-ann-benchmarks/neurips23/runbooks/simple_runbook.yaml
+      Dataset Name: random-xs
+Ground Truth Directory: /Users/priya/Downloads/big-ann-benchmarks/data/random10000/10000/simple_runbook.yaml
+  IP Delete Method: TwoHopAndOneHop
+IP Delete Num to Replace: 3
+Consolidate Threshold: 1
+Index Build Parameters:
+              file: /Users/priya/Downloads/big-ann-benchmarks/data/random10000/data_10000_20
+         data_type: float32
+        max degree: 32
+           L-build: 50
+             alpha: 1.2
+start point strategy: Medoid
+    backedge ratio: 1
+Using Multi Insert: NO
+start_point_strategy: Medoid
+     build threads: 4
+         Save Path: None
+
++-------------------------------+
+| Finished stage 1 of 6: insert |
++-------------------------------+
+Manager Overhead: 0.00081s
+Index Build Time: 0.109456s
+Vectors Inserted: 10000
+Kind: single insert
+Insert Latencies:
+  average: 42.9275us
+      p90: 61us
+      p99: 83us
+
+
++-------------------------------+
+| Finished stage 2 of 6: search |
++-------------------------------+
+Manager Overhead: 0.001858s
+ Ls,   KNN,   Avg cmps,   Avg hops,       QPS - mean(max),       Avg Latency,     p99 Latency,   Recall,   Threads
+==================================================================================================================
+ 20,    10,    327.503,     23.646,   176991.2 (176991.2),   10.6us (10.6us),   16.0us (16us),        1,         2
+ 50,    10,    644.985,      53.18,     90098.2 (90098.2),   21.6us (21.6us),   26.0us (26us),        1,         2
+100,    10,   1114.575,     102.83,     47265.7 (47265.7),   41.8us (41.8us),   62.0us (62us),        1,         2
+
++-------------------------------+
+| Finished stage 3 of 6: delete |
++-------------------------------+
+Manager Overhead: 0.000352s
+Delete Time: 0.109899s
+Vectors Processed: 5000
+Batches: 5000
+Delete Latencies:
+  average: 70.7616us
+      p90: 122us
+      p99: 184us
+
+
++-------------------------------+
+| Finished stage 4 of 6: search |
++-------------------------------+
+Manager Overhead: 0.001195s
+ Ls,   KNN,   Avg cmps,   Avg hops,       QPS - mean(max),       Avg Latency,     p99 Latency,   Recall,   Threads
+==================================================================================================================
+ 20,    10,    342.416,     23.365,   177651.4 (177651.4),   10.7us (10.7us),   15.0us (15us),        0,         2
+ 50,    10,    635.619,     52.877,     89453.4 (89453.4),   21.8us (21.8us),   26.0us (26us),        0,         2
+100,    10,    1039.16,    102.524,     48809.1 (48809.1),   40.4us (40.4us),   48.0us (48us),        0,         2
+
++-------------------------------+
+| Finished stage 5 of 6: insert |
++-------------------------------+
+Manager Overhead: 0.000347s
+Index Build Time: 0.041157s
+Vectors Inserted: 5000
+Kind: single insert
+Insert Latencies:
+  average: 32.2026us
+      p90: 39us
+      p99: 48us
+
+
++-------------------------------+
+| Finished stage 6 of 6: search |
++-------------------------------+
+Manager Overhead: 0.001331s
+ Ls,   KNN,   Avg cmps,   Avg hops,       QPS - mean(max),       Avg Latency,     p99 Latency,   Recall,   Threads
+==================================================================================================================
+ 20,    10,    301.122,     23.751,   184365.8 (184365.8),   10.2us (10.2us),   17.0us (17us),   0.0002,         2
+ 50,    10,     580.83,     53.303,     94518.0 (94518.0),   20.5us (20.5us),   28.0us (28us),   0.0002,         2
+100,    10,   1002.381,    102.898,     50100.2 (50100.2),   39.4us (39.4us),   58.0us (58us),   0.0002,         2
+
++--------------------+
+| End of Run Summary |
++--------------------+
+Stage,       Operation,   Mean Latency (us),   P90 Latency,   P99 Latency
+=========================================================================
+    0,   single insert,              42.9us,          61us,          83us
+    2,          Delete,              70.8us,         122us,         184us
+    4,   single insert,              32.2us,          39us,          48us
+
+Search Stage 1
+ Ls,   KNN,   Avg cmps,   Avg hops,       QPS - mean(max),       Avg Latency,     p99 Latency,   Recall,   Threads
+==================================================================================================================
+ 20,    10,    327.503,     23.646,   176991.2 (176991.2),   10.6us (10.6us),   16.0us (16us),        1,         2
+ 50,    10,    644.985,      53.18,     90098.2 (90098.2),   21.6us (21.6us),   26.0us (26us),        1,         2
+100,    10,   1114.575,     102.83,     47265.7 (47265.7),   41.8us (41.8us),   62.0us (62us),        1,         2
+
+Search Stage 3
+ Ls,   KNN,   Avg cmps,   Avg hops,       QPS - mean(max),       Avg Latency,     p99 Latency,   Recall,   Threads
+==================================================================================================================
+ 20,    10,    342.416,     23.365,   177651.4 (177651.4),   10.7us (10.7us),   15.0us (15us),        0,         2
+ 50,    10,    635.619,     52.877,     89453.4 (89453.4),   21.8us (21.8us),   26.0us (26us),        0,         2
+100,    10,    1039.16,    102.524,     48809.1 (48809.1),   40.4us (40.4us),   48.0us (48us),        0,         2
+
+Search Stage 5
+ Ls,   KNN,   Avg cmps,   Avg hops,       QPS - mean(max),       Avg Latency,     p99 Latency,   Recall,   Threads
+==================================================================================================================
+ 20,    10,    301.122,     23.751,   184365.8 (184365.8),   10.2us (10.2us),   17.0us (17us),   0.0002,         2
+ 50,    10,     580.83,     53.303,     94518.0 (94518.0),   20.5us (20.5us),   28.0us (28us),   0.0002,         2
+100,    10,   1002.381,    102.898,     50100.2 (50100.2),   39.4us (39.4us),   58.0us (58us),   0.0002,         2
+
+
