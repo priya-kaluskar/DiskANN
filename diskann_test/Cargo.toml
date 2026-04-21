@@ -13,7 +13,8 @@ diskann = { path = "../diskann", features = ["testing"] }
 diskann-vector = { path = "../diskann-vector" }
 diskann-benchmark-core = { path = "../diskann-benchmark-core" }
 diskann-utils = { path = "../diskann-utils" }
-tokio = { version = "1" }
+tokio = { workspace = true, features = ["rt-multi-thread", "fs", "io-util", "macros"] }
+bytemuck = { workspace = true }
 
 [lints]
 workspace = true
