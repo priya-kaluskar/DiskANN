@@ -1,0 +1,49 @@
+warning: unused variable: `dim`
+  --> diskann_test/src/main.rs:53:9
+   |
+53 |     let dim = data.ncols();
+   |         ^^^ help: if this is intentional, prefix it with an underscore: `_dim`
+   |
+   = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: `diskann_test` (bin "diskann_test") generated 1 warning (run `cargo fix --bin "diskann_test" -p diskann_test` to apply 1 suggestion)
+    Finished `release` profile [optimized + debuginfo] target(s) in 0.20s
+     Running `target/release/diskann_test`
+Loading dataset: 10000 vectors, 20 dimensions
+
+=== Static Index ===
+Built static index with 10000 vectors in 596.26ms
+Throughput: 16771 inserts/sec
+[static after build] Degree stats -> max: 36, min: 6, avg: 23.32, nodes with degree < 2: 0
+Static index: no insert/delete after build
+
+=== Dynamic Index: Single Insert ===
+Inserted 10000 nodes one by one in 596.89ms
+Throughput: 16753 inserts/sec
+[single insert after build] Degree stats -> max: 36, min: 6, avg: 23.32, nodes with degree < 2: 0
+
+=== Dynamic Index: Multi Insert ===
+Multi-inserted 10000 nodes in 347.23ms
+Throughput: 28799 inserts/sec
+[multi insert after build] Degree stats -> max: 36, min: 6, avg: 23.33, nodes with degree < 2: 0
+
+=== Dynamic Index: Inplace Delete ===
+Built index with 10000 nodes
+[before delete] Degree stats -> max: 36, min: 6, avg: 23.32, nodes with degree < 2: 0
+Deleting nodes: [0, 1, 2, 3, 4]
+Deleted 5 nodes in 458.42µs
+Throughput: 10907 deletes/sec
+[after delete] Degree stats -> max: 36, min: 0, avg: 23.32, nodes with degree < 2: 5
+  Node 0 is deleted - OK
+  Node 1 is deleted - OK
+  Node 2 is deleted - OK
+  Node 3 is deleted - OK
+  Node 4 is deleted - OK
+Delete verification passed
+
+=== Dynamic Index: Drop Deleted (consolidate) ===
+Marked nodes [0, 1, 2, 3, 4] as deleted
+[before consolidate] Degree stats -> max: 36, min: 6, avg: 23.32, nodes with degree < 2: 0
+Consolidation of 10000 nodes in 4.50ms
+[after consolidate] Degree stats -> max: 36, min: 6, avg: 23.31, nodes with degree < 2: 0
+No deleted nodes appear as neighbors - OK
