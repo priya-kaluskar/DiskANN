@@ -4,11 +4,10 @@ use std::time::Instant;
 use diskann::{
     graph::{
         AdjacencyList, DiskANNIndex, InplaceDeleteMethod,
-        index::DegreeStats,
-        test::{provider, synthetic},
+        test::{provider},
     },
     provider::{Delete, NeighborAccessor},
-    utils::{IntoUsize, ONE},
+    utils::ONE,
 };
 use diskann_benchmark_core::{
     build::{
@@ -19,23 +18,46 @@ use diskann_benchmark_core::{
     streaming::graph::{DropDeleted, InplaceDelete},
 };
 
-fn build_index(
-    grid: synthetic::Grid,
-    size: usize,
+const DATASET_PATH: &str = "/Users/priya/Downloads/big-ann-benchmarks/data/random10000/data_10000_20";
+const MAX_DEGREE: usize = 32;
+
+fn load_dataset(path: &str) -> Arc<diskann_utils::views::Matrix<f32>> {
+    use std::io::Read;
+    let mut file = std::fs::File::open(path).expect("Failed to open dataset file");
+    let mut buf = [0u8; 4];
+
+    file.read_exact(&mut buf).unwrap();
+    let num_vectors = u32::from_le_bytes(buf) as usize;
+
+    file.read_exact(&mut buf).unwrap();
+    let dim = u32::from_le_bytes(buf) as usize;
+
+    println!("Loading dataset: {} vectors, {} dimensions", num_vectors, dim);
+
+    let total = num_vectors * dim;
+    let mut flat: Vec<f32> = vec![0.0f32; total];
+    let bytes: &mut [u8] = bytemuck::cast_slice_mut(&mut flat);
+    file.read_exact(bytes).unwrap();
+    Arc::new(diskann_utils::views::Matrix::try_from(flat.into_boxed_slice(), num_vectors, dim).unwrap())
+}
+
+fn build_index_from_data(
+    data: Arc<diskann_utils::views::Matrix<f32>>,
 ) -> (
     Arc<DiskANNIndex<provider::Provider>>,
-    Arc<diskann_utils::views::Matrix<f32>>,
     usize,
 ) {
     let start_id = u32::MAX;
     let distance = diskann_vector::distance::Metric::L2;
+    let nrows = data.nrows();
+    let dim = data.ncols();
 
-    let start_point = grid.start_point(size);
-    let data = Arc::new(grid.data(size));
+    // Use the first vector as the start point
+    let start_point = data.row(0).to_vec();
 
     let provider_config = provider::Config::new(
         distance,
-        2 * grid.dim().into_usize(),
+        MAX_DEGREE + 4,
         std::iter::once(provider::StartPoint::new(start_id, start_point)),
     )
     .unwrap();
@@ -45,16 +67,15 @@ fn build_index(
     let index_config = diskann::graph::config::Builder::new(
         provider.max_degree().checked_sub(3).unwrap(),
         diskann::graph::config::MaxDegree::new(provider.max_degree()),
-        20,
+        64,
         distance.into(),
     )
     .build()
     .unwrap();
 
-    let nrows = data.nrows();
     let index = Arc::new(DiskANNIndex::new(index_config, provider, None));
 
-    (index, data, nrows)
+    (index, nrows)
 }
 
 fn print_degree_stats(
@@ -88,12 +109,10 @@ fn print_degree_stats(
     );
 }
 
-fn test_static_index() {
+fn test_static_index(data: Arc<diskann_utils::views::Matrix<f32>>) {
     println!("\n=== Static Index ===");
 
-    let grid = synthetic::Grid::Four;
-    let size = 4;
-    let (index, data, nrows) = build_index(grid, size);
+    let (index, nrows) = build_index_from_data(data.clone());
     let rt = diskann_benchmark_core::tokio::runtime(1).unwrap();
 
     let start = Instant::now();
@@ -119,12 +138,10 @@ fn test_static_index() {
     println!("Static index: no insert/delete after build");
 }
 
-fn test_dynamic_single_insert() {
+fn test_dynamic_single_insert(data: Arc<diskann_utils::views::Matrix<f32>>) {
     println!("\n=== Dynamic Index: Single Insert ===");
 
-    let grid = synthetic::Grid::Four;
-    let size = 4;
-    let (index, data, nrows) = build_index(grid, size);
+    let (index, nrows) = build_index_from_data(data.clone());
     let rt = diskann_benchmark_core::tokio::runtime(1).unwrap();
 
     let start = Instant::now();
@@ -149,12 +166,10 @@ fn test_dynamic_single_insert() {
     print_degree_stats("single insert after build", &index, nrows, &rt);
 }
 
-fn test_dynamic_multi_insert() {
+fn test_dynamic_multi_insert(data: Arc<diskann_utils::views::Matrix<f32>>) {
     println!("\n=== Dynamic Index: Multi Insert ===");
 
-    let grid = synthetic::Grid::Four;
-    let size = 4;
-    let (index, data, nrows) = build_index(grid, size);
+    let (index, nrows) = build_index_from_data(data.clone());
     let rt = diskann_benchmark_core::tokio::runtime(2).unwrap();
 
     let start = Instant::now();
@@ -179,12 +194,10 @@ fn test_dynamic_multi_insert() {
     print_degree_stats("multi insert after build", &index, nrows, &rt);
 }
 
-fn test_dynamic_inplace_delete() {
+fn test_dynamic_inplace_delete(data: Arc<diskann_utils::views::Matrix<f32>>) {
     println!("\n=== Dynamic Index: Inplace Delete ===");
 
-    let grid = synthetic::Grid::Four;
-    let size = 4;
-    let (index, data, nrows) = build_index(grid, size);
+    let (index, nrows) = build_index_from_data(data.clone());
     let rt = diskann_benchmark_core::tokio::runtime(2).unwrap();
 
     build::build(
@@ -202,7 +215,7 @@ fn test_dynamic_inplace_delete() {
     println!("Built index with {} nodes", nrows);
     print_degree_stats("before delete", &index, nrows, &rt);
 
-    let to_delete: Box<[u32]> = Box::new([0u32, 1, 2]);
+    let to_delete: Box<[u32]> = Box::new([0u32, 1, 2, 3, 4]);
     println!("Deleting nodes: {:?}", to_delete);
 
     let start = Instant::now();
@@ -243,12 +256,10 @@ fn test_dynamic_inplace_delete() {
     println!("Delete verification passed");
 }
 
-fn test_dynamic_drop_deleted() {
+fn test_dynamic_drop_deleted(data: Arc<diskann_utils::views::Matrix<f32>>) {
     println!("\n=== Dynamic Index: Drop Deleted (consolidate) ===");
 
-    let grid = synthetic::Grid::Four;
-    let size = 4;
-    let (index, data, nrows) = build_index(grid, size);
+    let (index, nrows) = build_index_from_data(data.clone());
     let rt = diskann_benchmark_core::tokio::runtime(2).unwrap();
 
     build::build(
@@ -264,7 +275,7 @@ fn test_dynamic_drop_deleted() {
     .unwrap();
 
     let ctx = provider::Context::new();
-    let to_delete = [0u32, 1];
+    let to_delete = [0u32, 1, 2, 3, 4];
     for i in to_delete {
         rt.block_on(index.provider().delete(&ctx, &i)).unwrap();
     }
@@ -304,9 +315,10 @@ fn test_dynamic_drop_deleted() {
 }
 
 fn main() {
-    test_static_index();
-    test_dynamic_single_insert();
-    test_dynamic_multi_insert();
-    test_dynamic_inplace_delete();
-    test_dynamic_drop_deleted();
+    let data = load_dataset(DATASET_PATH);
+    test_static_index(data.clone());
+    test_dynamic_single_insert(data.clone());
+    test_dynamic_multi_insert(data.clone());
+    test_dynamic_inplace_delete(data.clone());
+    test_dynamic_drop_deleted(data.clone());
 }
